@@ -1,0 +1,8 @@
+plaintext
+venv/
+.env
+
+media/
+audio to transcribe/
+transcripts/
+__pycache__/
