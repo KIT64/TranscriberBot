@@ -1,8 +1,9 @@
-plaintext
-env/
-.env
-
+__pycache__/
 media/
 audio to transcribe/
 transcripts/
-__pycache__/
+
+plaintext
+env/
+.env
+TODO
