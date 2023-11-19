@@ -28,6 +28,10 @@ time_pattern_optional = r"((\d)+:(\d){2}:(\d){2})?"  # H/HH:MM:SS format
 )
 async def transcribe_video(message: types.Message):
     print("Got the video!")
+    await message.answer(
+            "Ссылку получил, сейчас выдам файл транскрипции 😇\n"
+            "Подожди, пожалуйста, это может занять некоторое время ⏳"
+    )
     args = message.text.split(" ")
     video_url = args[0]
     print(f"video_url: {video_url}")
