@@ -19,6 +19,7 @@ def get_mp3_from_youtube_video(video_url, audio_folder_path="") -> str:
 
     print("Converting mp4 to mp3...")
     audio = AudioSegment.from_file(mp4_audio_file_path, format="mp4")
+    print("Got the audio_segment instance of mp4 file")
     audio.export(mp3_file_path, format="mp3")
     print(f"mp4 audio converted to mp3 to {mp3_file_path}")
 
