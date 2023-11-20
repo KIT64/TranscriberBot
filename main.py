@@ -88,11 +88,12 @@ async def transcribe_video(message: types.Message):
         mp3_file_path = utils.get_mp3_from_youtube_video(
             video_url, audio_folder_path="audio to transcribe"
         )
-    except:
+    except Exception as e:
         await message.answer(
             "К сожалению, произошла ошибка при получении аудиофайла из видео 😔\n"
             "Пожалуйста, обратитесь к разработчику, чтобы ошибка была исправлена 🔧"
         )
+        print(f"Error downloading and converting audio from youtube video: {e}")
         return
 
     if start_time == 0 and end_time == youtube_video.length:
