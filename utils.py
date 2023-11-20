@@ -34,7 +34,7 @@ def trim_audio(audio_file_path, start_time, end_time, format="mp3",) -> str:
 
     audio_file_folder = os.path.dirname(audio_file_path)
     audio_file_name = os.path.basename(audio_file_path)
-    trimmed_audio_file_name = os.path.splitext(audio_file_name)[0] + "_trimmed"
+    trimmed_audio_file_name = os.path.splitext(audio_file_name)[0] + "_trimmed" + "." + format
     trimmed_audio_file_path = os.path.join(audio_file_folder, trimmed_audio_file_name)
 
     trimmed_audio.export(trimmed_audio_file_path, format=format)
