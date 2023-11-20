@@ -1,2 +1,14 @@
 [phases.setup]
-aptPkgs = ["...", "libav"]
+aptPkgs = [
+  "...",
+  "ffmpeg",
+  "imagemagick",
+  "ghostscript",
+  "gsfonts",
+  "fonts-droid-fallback",
+  "fonts-noto-mono",
+  "fonts-urw-base35",
+]
+
+[start]
+cmd = "ffmpeg 2>&1"
