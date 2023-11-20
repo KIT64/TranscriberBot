@@ -27,7 +27,6 @@ time_pattern_optional = r"((\d)+:(\d){2}:(\d){2})?"  # H/HH:MM:SS format
     )
 )
 async def transcribe_video(message: types.Message):
-    print("Got the video!")
     await message.answer(
             "Ссылку получил, сейчас выдам файл транскрипции 😇\n"
             "Подожди, пожалуйста, это может занять некоторое время ⏳"
@@ -103,7 +102,9 @@ async def transcribe_video(message: types.Message):
             await message.answer("Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒")
             return
     else:
+        print("Trimming the audio...")
         trimmed_mp3_file_path = utils.trim_audio(mp3_file_path, start_time, end_time, format="mp3")
+        print(f"File was successfully trimmed to: {trimmed_mp3_file_path}")
         try:
             transcript = transcriber.transcribe(trimmed_mp3_file_path, language="ru", format="mp3")
         except:
