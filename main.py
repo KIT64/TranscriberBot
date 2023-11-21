@@ -115,6 +115,7 @@ async def transcribe_video(message: types.Message):
 
     mp3_file_name = os.path.basename(mp3_file_path)
     transcript_file_name = os.path.splitext(mp3_file_name)[0] + ".txt"
+    transcript_file_name = mp3_file_name.replace(".mp3", ".txt")
     transcript_file_path = utils.write_transcript_to_file(
         transcript, folder_path="transcripts", file_name=transcript_file_name
     )

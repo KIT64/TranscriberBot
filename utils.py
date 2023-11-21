@@ -16,9 +16,8 @@ def get_mp3_from_youtube_video(video_url, audio_folder_path="") -> str:
     print("Downloading the audio stream...")
     mp4_audio_file_path = audio_stream.download(output_path=audio_folder_path)
     print(f"Audio stream (mp4) downloaded to {mp4_audio_file_path}")
-
     file_size = os.path.getsize(mp4_audio_file_path)
-    print(f"Size of the mp4 file is {file_size / 1024:.2f} kilobytes")
+    print(f"Size of mp4 file is {file_size / 1024:.2f} kilobytes")
 
     print("Converting mp4 to mp3...")
     audio = AudioSegment.from_file(mp4_audio_file_path, format="mp4")

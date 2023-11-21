@@ -27,7 +27,7 @@ def transcribe(audio_file_path: str, language="ru", format="mp3") -> str:
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     file_size = os.path.getsize(audio_file_path)
-    print(f"The size of the audio file is {file_size / 1024:.2f} kilobytes")
+    print(f"The size of the file to be transcribed is {file_size / 1024:.2f} kilobytes")
 
     if file_size < MAX_FILE_SIZE * 1024 * 1024:
         try:
