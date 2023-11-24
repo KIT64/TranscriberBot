@@ -86,7 +86,7 @@ async def transcribe_video(message: types.Message):
 
     try:
         mp3_file_path = utils.get_mp3_from_youtube_video(
-            video_url, audio_folder_path="audio to transcribe"
+            video_url, start_time, end_time, audio_folder_path="audio storage"
         )
     except Exception as e:
         await message.answer(
@@ -96,23 +96,14 @@ async def transcribe_video(message: types.Message):
         print(f"Error downloading and converting audio from youtube video: {e}")
         return
 
-    if start_time == 0 and end_time == video.length:
-        try:
-            transcript = transcriber.transcribe(mp3_file_path, language="ru", format="mp3")
-        except:
-            await message.answer("Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒")
-            return
-    else:
-        print("Trimming the audio...")
-        trimmed_mp3_file_path = utils.trim_audio(mp3_file_path, start_time, end_time, format="mp3")
-        print(f"File was successfully trimmed to: {trimmed_mp3_file_path}")
-        try:
-            transcript = transcriber.transcribe(trimmed_mp3_file_path, language="ru", format="mp3")
-        except:
-            await message.answer("Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒")
-            return
-        finally:
-            os.remove(trimmed_mp3_file_path)
+    try:
+        transcript = transcriber.transcribe(mp3_file_path, language="ru", format="mp3")
+    except:
+        await message.answer("Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒")
+        return
+    finally:
+        os.remove(mp3_file_path)
+        print("mp3 file was successfully deleted")
 
     mp3_file_name = os.path.basename(mp3_file_path)
     transcript_file_name = os.path.splitext(mp3_file_name)[0] + ".txt"
@@ -125,6 +116,8 @@ async def transcribe_video(message: types.Message):
         file_path = os.path.realpath(transcript_file.name)
         file_id = types.FSInputFile(file_path)
     await message.answer_document(file_id)
+    os.remove(transcript_file_path)
+    print("Transcript file was successfully deleted")
 
 
 async def main():
