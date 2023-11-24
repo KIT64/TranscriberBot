@@ -103,7 +103,6 @@ async def transcribe_video(message: types.Message):
         return
     finally:
         os.remove(mp3_file_path)
-        print("mp3 file was successfully deleted")
 
     mp3_file_name = os.path.basename(mp3_file_path)
     transcript_file_name = os.path.splitext(mp3_file_name)[0] + ".txt"
@@ -117,7 +116,7 @@ async def transcribe_video(message: types.Message):
         file_id = types.FSInputFile(file_path)
     await message.answer_document(file_id)
     os.remove(transcript_file_path)
-    print("Transcript file was successfully deleted")
+    print("Transcription was successfully sent to the user")
 
 
 async def main():

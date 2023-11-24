@@ -21,7 +21,7 @@ def get_mp3_from_youtube_video(video_url, start_time, end_time, audio_folder_pat
         mp4_audio_file_path, format="mp4", start_second=start_time, duration=(end_time - start_time)
     )
     mp3_audio.export(mp3_file_path, format="mp3")
-    print(f"mp4 audio trimmed and converted to mp3 to {mp3_file_path}")
+    print(f"MP4 audio was successfully converted to mp3")
 
     return mp3_file_path
 
@@ -31,5 +31,4 @@ def write_transcript_to_file(transcript, folder_path, file_name) -> str:
     transcript_file_path = os.path.join(folder_path, file_name)
     with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:
         transcript_file.write(transcript)
-    print(f"Transcript saved to: {transcript_file_path}")
     return transcript_file_path
