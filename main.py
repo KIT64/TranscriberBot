@@ -27,10 +27,6 @@ time_pattern_optional = r"((\d)+:(\d){2}:(\d){2})?"  # H/HH:MM:SS format
     )
 )
 async def transcribe_video(message: types.Message):
-    await message.answer(
-            "Ссылку получил, сейчас выдам файл транскрипции 😇\n"
-            "Подожди, пожалуйста, это может занять некоторое время ⏳"
-    )
     args = message.text.split(" ")
     video_url = args[0]
     print(f"video_url: {video_url}")
@@ -82,6 +78,11 @@ async def transcribe_video(message: types.Message):
     except IndexError:
         end_time = video.length
     print(f"end_time: {end_time}")
+
+    await message.answer(
+            "Ссылку получил, сейчас выдам файл транскрипции 😇\n"
+            "Подожди, пожалуйста, это может занять некоторое время ⏳"
+    )
 
     try:
         mp3_file_path = utils.get_mp3_from_youtube_video(
