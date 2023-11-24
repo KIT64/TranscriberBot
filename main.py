@@ -12,7 +12,7 @@ import utils
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 dp = Dispatcher()
 
-youtube_url_pattern = r"(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?"
+youtube_url_pattern = r"(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|live\/|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?"
 time_pattern_optional = r"((\d)+:(\d){2}:(\d){2})?"  # H/HH:MM:SS format
 
 @dp.message(
@@ -34,13 +34,13 @@ async def transcribe_video(message: types.Message):
     args = message.text.split(" ")
     video_url = args[0]
     print(f"video_url: {video_url}")
-    youtube_video = pytube.YouTube(video_url)
+    video = pytube.YouTube(video_url)
 
     try:
         input_start_time = args[1]
         time_object = datetime.strptime(input_start_time, "%H:%M:%S")
         start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
-        if start_time > youtube_video.length:
+        if start_time > video.length:
             await message.answer("Время старта больше, чем длина всего видео 😲😲😲")
             print("Failed to transcript the video: start_time > video.length")
             return
@@ -60,7 +60,7 @@ async def transcribe_video(message: types.Message):
         input_end_time = args[2]
         time_object = datetime.strptime(input_end_time, "%H:%M:%S")
         end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
-        if end_time > youtube_video.length:
+        if end_time > video.length:
             await message.answer("Время финиша больше, чем длина всего видео 🤨")
             print("Failed to transcript the video: end_time > video.length")
             return
@@ -80,7 +80,7 @@ async def transcribe_video(message: types.Message):
         print("Failed to transcript the video: wrong format for end_time")
         return
     except IndexError:
-        end_time = youtube_video.length
+        end_time = video.length
     print(f"end_time: {end_time}")
 
     try:
@@ -95,7 +95,7 @@ async def transcribe_video(message: types.Message):
         print(f"Error downloading and converting audio from youtube video: {e}")
         return
 
-    if start_time == 0 and end_time == youtube_video.length:
+    if start_time == 0 and end_time == video.length:
         try:
             transcript = transcriber.transcribe(mp3_file_path, language="ru", format="mp3")
         except:
