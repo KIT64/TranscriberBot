@@ -15,7 +15,10 @@ def get_mp3_from_youtube_video(video_url, start_time, end_time, audio_folder_pat
             audio_stream = video.streams.get_audio_only()
             print("Downloading the audio stream...")
             mp4_audio_file_path = audio_stream.download(output_path=audio_folder_path)
-            print(f"Audio stream (mp4) downloaded to {mp4_audio_file_path}")
+            if os.path.exists(mp4_audio_file_path):
+                print(f"Audio stream (mp4) downloaded to {mp4_audio_file_path}")
+            else:
+                print(f"Audio stream (mp4) failed to download")
         except Exception as e:
             os.remove(mp4_audio_file_path)
             print(f"Error while attempting to download audio stream from youtube: {e}")
