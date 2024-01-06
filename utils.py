@@ -42,7 +42,6 @@ def write_transcript_to_file(transcript, folder_path, file_name) -> str:
     return transcript_file_path
 
 def sanitize_filename(filename):
-    # Replace invalid characters with underscores
     invalid_chars = {'.', '/'}
     sanitized_filename = ''.join(char if char not in invalid_chars else '_' for char in filename)
     return sanitized_filename

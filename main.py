@@ -1,122 +1,221 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import CommandStart
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 
-import os
 import pytube
+import os
+import re
 from datetime import datetime
 
 import transcriber
 import utils
+import keyboards
 
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 dp = Dispatcher()
 
-youtube_url_pattern = r"(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|live\/|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?"
-time_pattern_optional = r"((\d)+:(\d){2}:(\d){2})?"  # H/HH:MM:SS format
+youtube_url_pattern = r'(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|live\/|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?'
+hms_time_pattern = r'((\d)+:(\d){2}:(\d){2})'  # H/HH:MM:SS format
+ms_time_pattern = r'((\d)+:(\d){2})'  # M/MM:SS format
 
-@dp.message(
-    F.text.regexp(
-        r"^"
-        + youtube_url_pattern
-        + r"(\s)?"
-        + time_pattern_optional
-        + r"(\s)?"
-        + time_pattern_optional
-        + r"$"
-    )
-)
-async def transcribe_video(message: types.Message):
-    args = message.text.split(" ")
-    video_url = args[0]
-    print(f"video_url: {video_url}")
-    video = pytube.YouTube(video_url)
 
-    try:
-        input_start_time = args[1]
-        time_object = datetime.strptime(input_start_time, "%H:%M:%S")
-        start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
-        if start_time > video.length:
-            await message.answer("Время старта больше, чем длина всего видео 😲😲😲")
-            print("Failed to transcript the video: start_time > video.length")
-            return
-    except ValueError:
-        await message.answer(
-                "Формат времени для старта неверный\n"
-                "Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n"
-                "Я понимаю в формате: ЧЧ:ММ:СС или Ч:ММ:СС"
-            )
-        print("Failed to transcript the video: wrong time format for start_time ")
-        return
-    except IndexError:
-        start_time = 0
-    print(f"start_time: {start_time}")
+class video_transcription_FSM(StatesGroup):
+    waiting_for_youtube_url = State()
+    waiting_for_start_time = State()
+    waiting_for_end_time = State()
 
-    try:
-        input_end_time = args[2]
-        time_object = datetime.strptime(input_end_time, "%H:%M:%S")
-        end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
-        if end_time > video.length:
-            await message.answer("Время финиша больше, чем длина всего видео 🤨")
-            print("Failed to transcript the video: end_time > video.length")
-            return
-        if start_time > end_time:
-            await message.answer(
-                "Хмм, кажется Вы что-то перепутали 🤔\n"
-                "У Вас время старта опережает время финиша 🧐"
-            )
-            print("Failed to transcript the video: start_time > end_time")
-            return
-    except ValueError:
-        await message.answer(
-                "Формат времени для финиша неверный\n"
-                "Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n"
-                "Я понимаю в формате: ЧЧ:ММ:СС или Ч:ММ:СС"
-            )
-        print("Failed to transcript the video: wrong format for end_time")
-        return
-    except IndexError:
-        end_time = video.length
-    print(f"end_time: {end_time}")
 
+@dp.message(CommandStart())
+async def start(message: types.Message):
     await message.answer(
-            "Ссылку получил, сейчас выдам файл транскрипции 😇\n"
-            "Подожди, пожалуйста, это может занять некоторое время ⏳"
+        'Привет! 👋\n'
+        'Я Бот-транскриптор 🤗\n'
+        'C помощью меня вы можете перевести видео в текст 📝\n'
+        'Чтобы начать, нажми на кнопку "Транскрипция видео"',
+        reply_markup=keyboards.main_keyboard()
+    )
+    
+
+@dp.message(F.text == 'Транскрипция видео')
+@dp.message(F.text == 'Начать ввод заново')
+async def start_video_transcription_input(message: types.Message, state: FSMContext):
+    await state.set_state(video_transcription_FSM.waiting_for_youtube_url)
+    await message.answer(
+        'Отправьте ссылку на ролик в YouTube',
+        reply_markup=keyboards.cancel_transcription_keyboard()
+    )
+
+
+@dp.message(F.text == 'Отменить текущий ввод')
+async def cancel_current_transcription_input(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        'Ввод данных для транскрипции видео был отменен 👌',
+        reply_markup=keyboards.main_keyboard()
+    )
+
+
+@dp.message(video_transcription_FSM.waiting_for_youtube_url)
+async def youtube_url_entered(message: types.Message, state: FSMContext):
+    if not re.match(youtube_url_pattern, message.text):
+        await message.answer(
+            'Неверный формат ссылки для ролика из YouTube 🙈\n'
+            'Попробуйте ещё раз'
+        )
+        return
+    await state.update_data(youtube_url=message.text)
+
+    await state.set_state(video_transcription_FSM.waiting_for_start_time)
+    await message.answer('Отправьте время начала эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС\n'
+                         'Или нажмите "Пропустить"',
+                         reply_markup=keyboards.skip_time_inline_keyboard())
+    
+
+@dp.callback_query(video_transcription_FSM.waiting_for_start_time, F.data == 'skip_time_input')
+async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer('Время начала эпизода пропущено')
+    await state.update_data(start_time=0)
+
+    await state.set_state(video_transcription_FSM.waiting_for_end_time)
+    await callback.message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
+                                  'Или нажмите "Пропустить"',
+                                  reply_markup=keyboards.skip_time_inline_keyboard())
+
+
+@dp.message(video_transcription_FSM.waiting_for_start_time)
+async def start_time_entered(message: types.Message, state: FSMContext):
+    input_start_time = message.text
+    if re.match(hms_time_pattern, input_start_time):
+        time_object = datetime.strptime(input_start_time, '%H:%M:%S')
+        start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+    elif re.match(ms_time_pattern, input_start_time):
+        time_object = datetime.strptime(input_start_time, '%M:%S')
+        start_time = time_object.minute * 60 + time_object.second
+    else:
+        await message.answer(
+            'Неверный формат времени для начала эпизода 🙈\n'
+            'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
+            'Я понимаю в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС'
+        )
+        return
+    data = await state.get_data()
+    video = pytube.YouTube(data.get('youtube_url'))
+    if start_time > video.length:
+        await message.answer(
+            'Время начала эпизода больше, чем длина всего видео 😲\n'
+            'Вы что-то перепутали 🤔\n'
+            'Попробуйте ещё раз'
+        )
+        return
+    await state.update_data(start_time=start_time)
+
+    await state.set_state(video_transcription_FSM.waiting_for_end_time)
+    await message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
+                         'Или нажмите "Пропустить"',
+                         reply_markup=keyboards.skip_time_inline_keyboard())
+
+
+@dp.callback_query(video_transcription_FSM.waiting_for_end_time, F.data == 'skip_time_input')
+async def end_time_skipped(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer('Время окончания эпизода пропущено')
+    data = await state.get_data()
+    youtube_url = data.get('youtube_url')
+    start_time = data.get('start_time')
+    video = pytube.YouTube(youtube_url)
+    end_time = video.length
+
+    await state.clear()
+    await transcribe_video_and_send_to_user(callback.message, youtube_url, start_time, end_time)
+
+
+@dp.message(video_transcription_FSM.waiting_for_end_time)
+async def end_time_entered(message: types.Message, state: FSMContext):
+    input_end_time = message.text
+    if re.match(hms_time_pattern, input_end_time):
+        time_object = datetime.strptime(input_end_time, '%H:%M:%S')
+        end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+    elif re.match(ms_time_pattern, input_end_time):
+        time_object = datetime.strptime(input_end_time, '%M:%S')
+        end_time = time_object.minute * 60 + time_object.second
+    else:
+        await message.answer(
+            'Неверный формат времени для окончания эпизода 🙈\n'
+            'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
+            'Я понимаю в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС'
+        )
+        return
+    data = await state.get_data()
+    youtube_url = data.get('youtube_url')
+    start_time = data.get('start_time')
+    video = pytube.YouTube(youtube_url)
+    if end_time > video.length:
+        await message.answer(
+            'Время окончания эпизода больше, чем длина всего видео 😲\n'
+            'Вы что-то перепутали 🤔\n'
+            'Попробуйте ещё раз'
+        )
+        return
+    if start_time > end_time:
+        await message.answer(
+            'Хмм, кажется Вы что-то перепутали 🤔\n'
+            'У Вас время начала эпизода опережает время его окончания 🧐'
+        )
+        return
+    
+    await state.clear()
+    await transcribe_video_and_send_to_user(message, youtube_url, start_time, end_time)
+
+
+async def transcribe_video_and_send_to_user(message: types.Message, video_url, start_time, end_time):
+    await message.answer(
+            'Ссылку получил, сейчас выдам файл транскрипции 😇\n'
+            'Подождите, пожалуйста, это может занять некоторое время ⏳'
     )
 
     try:
         mp3_file_path = utils.get_mp3_from_youtube_video(
-            video_url, start_time, end_time, audio_folder_path="audio storage"
+            video_url, start_time, end_time, audio_folder_path='audio storage'
         )
     except Exception as e:
         await message.answer(
-            "К сожалению, произошла ошибка при получении аудиофайла из видео 😔\n"
-            "Пожалуйста, обратитесь к разработчику, чтобы ошибка была исправлена 🔧"
+            'К сожалению, произошла ошибка при получении аудиофайла из видео 😔\n'
+            'Пожалуйста, обратитесь к разработчику, чтобы ошибка была исправлена 🔧'
         )
-        print(f"Error downloading and converting audio from youtube video: {e}")
+        print(f'Error downloading and converting audio from youtube video: {e}')
         return
-
+    
     try:
-        transcript = transcriber.transcribe(mp3_file_path, language="ru", format="mp3")
+        transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
     except:
-        await message.answer("Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒")
+        await message.answer('Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒')
         return
     finally:
         os.remove(mp3_file_path)
 
-    mp3_file_name = os.path.basename(mp3_file_path)
-    transcript_file_name = os.path.splitext(mp3_file_name)[0] + ".txt"
-    transcript_file_name = mp3_file_name.replace(".mp3", ".txt")
+    transcript_file_name = get_transcript_file_name(mp3_file_path)
     transcript_file_path = utils.write_transcript_to_file(
-        transcript, folder_path="transcripts", file_name=transcript_file_name
+        transcript, folder_path='transcripts', file_name=transcript_file_name
     )
+    await send_transcription_to_user(message, transcript_file_path)
 
-    with open(transcript_file_path, "r", encoding="utf-8") as transcript_file:
+
+def get_transcript_file_name(mp3_file_path):
+    mp3_file_name = os.path.basename(mp3_file_path)
+    transcript_file_name = os.path.splitext(mp3_file_name)[0] + '.txt'
+    transcript_file_name = mp3_file_name.replace('.mp3', '.txt')
+    return transcript_file_name
+
+
+async def send_transcription_to_user(message: types.Message, transcript_file_path):
+    with open(transcript_file_path, 'r', encoding='utf-8') as transcript_file:
         file_path = os.path.realpath(transcript_file.name)
         file_id = types.FSInputFile(file_path)
-    await message.answer_document(file_id)
+    await message.answer_document(file_id, reply_markup=keyboards.main_keyboard())
     os.remove(transcript_file_path)
-    print("Transcription was successfully sent to the user")
+    print('Transcription was successfully sent to the user')
 
 
 async def main():
@@ -125,6 +224,6 @@ async def main():
     await dp.start_polling(bot)
 
 
-if __name__ == "__main__":
-    print("Bot has been launched")
+if __name__ == '__main__':
+    print('Bot has been launched')
     asyncio.run(main())
