@@ -70,7 +70,7 @@ async def youtube_url_entered(message: types.Message, state: FSMContext):
 
     await state.set_state(video_transcription_FSM.waiting_for_start_time)
     await message.answer('Отправьте время начала эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС\n'
-                         'Или нажмите "Пропустить"',
+                         'Или нажмите "Пропустить", чтобы начать транскрипцию с начала видео',
                          reply_markup=keyboards.skip_time_inline_keyboard())
     
 
@@ -81,7 +81,7 @@ async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
 
     await state.set_state(video_transcription_FSM.waiting_for_end_time)
     await callback.message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
-                                  'Или нажмите "Пропустить"',
+                                  'Или нажмите "Пропустить", чтобы провести транскрипцию до конца видео',
                                   reply_markup=keyboards.skip_time_inline_keyboard())
 
 
@@ -114,7 +114,7 @@ async def start_time_entered(message: types.Message, state: FSMContext):
 
     await state.set_state(video_transcription_FSM.waiting_for_end_time)
     await message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
-                         'Или нажмите "Пропустить"',
+                         'Или нажмите "Пропустить", чтобы провести транскрипцию до конца видео',
                          reply_markup=keyboards.skip_time_inline_keyboard())
 
 
