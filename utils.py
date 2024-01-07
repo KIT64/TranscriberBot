@@ -20,7 +20,6 @@ def get_mp3_from_youtube_video(video_url, start_time, end_time, audio_folder_pat
             else:
                 print(f"Audio stream (mp4) failed to download")
         except Exception as e:
-            os.remove(mp4_audio_file_path)
             print(f"Error while attempting to download audio stream from youtube: {e}")
             raise e
 
