@@ -60,6 +60,7 @@ async def cancel_current_transcription_input(message: types.Message, state: FSMC
 
 @dp.message(video_transcription_FSM.waiting_for_youtube_url)
 async def youtube_url_entered(message: types.Message, state: FSMContext):
+    print("youtube_url: " + message.text)
     if not re.match(youtube_url_pattern, message.text):
         await message.answer(
             'Неверный формат ссылки для ролика из YouTube 🙈\n'
@@ -76,6 +77,7 @@ async def youtube_url_entered(message: types.Message, state: FSMContext):
 
 @dp.callback_query(video_transcription_FSM.waiting_for_start_time, F.data == 'skip_time_input')
 async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
+    print("start_time: skipped")
     await callback.answer('Время начала эпизода пропущено')
     await state.update_data(start_time=0)
 
@@ -88,6 +90,7 @@ async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
 @dp.message(video_transcription_FSM.waiting_for_start_time)
 async def start_time_entered(message: types.Message, state: FSMContext):
     input_start_time = message.text
+    print("start_time: " + input_start_time)
     if re.match(hms_time_pattern, input_start_time):
         time_object = datetime.strptime(input_start_time, '%H:%M:%S')
         start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
@@ -120,6 +123,7 @@ async def start_time_entered(message: types.Message, state: FSMContext):
 
 @dp.callback_query(video_transcription_FSM.waiting_for_end_time, F.data == 'skip_time_input')
 async def end_time_skipped(callback: types.CallbackQuery, state: FSMContext):
+    print("end_time: skipped")
     await callback.answer('Время окончания эпизода пропущено')
     data = await state.get_data()
     youtube_url = data.get('youtube_url')
@@ -134,6 +138,7 @@ async def end_time_skipped(callback: types.CallbackQuery, state: FSMContext):
 @dp.message(video_transcription_FSM.waiting_for_end_time)
 async def end_time_entered(message: types.Message, state: FSMContext):
     input_end_time = message.text
+    print("end_time: " + input_end_time)
     if re.match(hms_time_pattern, input_end_time):
         time_object = datetime.strptime(input_end_time, '%H:%M:%S')
         end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
