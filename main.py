@@ -100,9 +100,10 @@ async def start_time_entered(message: types.Message, state: FSMContext):
     else:
         await message.answer(
             'Неверный формат времени для начала эпизода 🙈\n'
-            'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
+            'Поправьте его, пожалуйста, чтобы я cмог его понять\n'
             'Я понимаю в формате: ч:мм:сс или мм:сс'
         )
+        print("Wrong time format")
         return
     data = await state.get_data()
     video = pytube.YouTube(data.get('youtube_url'))
@@ -148,9 +149,10 @@ async def end_time_entered(message: types.Message, state: FSMContext):
     else:
         await message.answer(
             'Неверный формат времени для окончания эпизода 🙈\n'
-            'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
+            'Поправьте его, пожалуйста, чтобы я cмог его понять\n'
             'Я понимаю в формате: ч:мм:сс или мм:сс'
         )
+        print("Wrong time format")
         return
     data = await state.get_data()
     youtube_url = data.get('youtube_url')
