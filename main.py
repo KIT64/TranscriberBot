@@ -69,7 +69,7 @@ async def youtube_url_entered(message: types.Message, state: FSMContext):
     await state.update_data(youtube_url=message.text)
 
     await state.set_state(video_transcription_FSM.waiting_for_start_time)
-    await message.answer('Отправьте время начала эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС\n'
+    await message.answer('Отправьте время начала эпизода в формате: ч:мин:сек или мин:сек\n'
                          'Или нажмите "Пропустить", чтобы начать транскрипцию с начала видео',
                          reply_markup=keyboards.skip_time_inline_keyboard())
     
@@ -80,7 +80,7 @@ async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(start_time=0)
 
     await state.set_state(video_transcription_FSM.waiting_for_end_time)
-    await callback.message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
+    await callback.message.answer('Отправьте время окончания эпизода в формате: ч:мин:сек или мин:сек"\n'
                                   'Или нажмите "Пропустить", чтобы провести транскрипцию до конца видео',
                                   reply_markup=keyboards.skip_time_inline_keyboard())
 
@@ -98,7 +98,7 @@ async def start_time_entered(message: types.Message, state: FSMContext):
         await message.answer(
             'Неверный формат времени для начала эпизода 🙈\n'
             'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
-            'Я понимаю в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС'
+            'Я понимаю в формате: ч:мин:сек или мин:сек'
         )
         return
     data = await state.get_data()
@@ -113,7 +113,7 @@ async def start_time_entered(message: types.Message, state: FSMContext):
     await state.update_data(start_time=start_time)
 
     await state.set_state(video_transcription_FSM.waiting_for_end_time)
-    await message.answer('Отправьте время окончания эпизода в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС"\n'
+    await message.answer('Отправьте время окончания эпизода в формате: ч:мин:сек или мин:сек"\n'
                          'Или нажмите "Пропустить", чтобы провести транскрипцию до конца видео',
                          reply_markup=keyboards.skip_time_inline_keyboard())
 
@@ -144,7 +144,7 @@ async def end_time_entered(message: types.Message, state: FSMContext):
         await message.answer(
             'Неверный формат времени для окончания эпизода 🙈\n'
             'Поправьте его, пожалуйста, чтобы я cмог его понять ❤️\n'
-            'Я понимаю в формате: Ч/ЧЧ:ММ:СС или М/ММ:СС'
+            'Я понимаю в формате: ч:мин:сек или мин:сек'
         )
         return
     data = await state.get_data()
