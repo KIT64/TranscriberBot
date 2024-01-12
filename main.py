@@ -97,7 +97,8 @@ async def start_time_entered(message: types.Message, state: FSMContext):
             start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
         except Exception as e:
             await message.answer(
-                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐'
+                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐\n'
+                'Попробуйте ещё раз'
             )
             print(f"Error converting input start_time: {e}")
             return
@@ -107,7 +108,8 @@ async def start_time_entered(message: types.Message, state: FSMContext):
             start_time = time_object.minute * 60 + time_object.second
         except Exception as e:
             await message.answer(
-                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐'
+                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐\n'
+                'Попробуйте ещё раз'
             )
             print(f"Error converting input start_time: {e}")
             return
@@ -160,7 +162,8 @@ async def end_time_entered(message: types.Message, state: FSMContext):
             end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
         except Exception as e:
             await message.answer(
-                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐'
+                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐\n'
+                'Попробуйте ещё раз'
             )
             print(f"Error converting input end_time: {e}")
             return
@@ -170,7 +173,8 @@ async def end_time_entered(message: types.Message, state: FSMContext):
             end_time = time_object.minute * 60 + time_object.second
         except Exception as e:
             await message.answer(
-                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐'
+                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐\n'
+                'Попробуйте ещё раз'
             )
             print(f"Error converting input end_time: {e}")
             return
