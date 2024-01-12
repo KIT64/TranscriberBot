@@ -18,8 +18,8 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 dp = Dispatcher()
 
 youtube_url_pattern = r'(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|live\/|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?'
-hms_time_pattern = r'((\d)+:(\d){2}:(\d){2})'  # H/HH:MM:SS format
-ms_time_pattern = r'((\d)+:(\d){2})'  # M/MM:SS format
+hms_time_pattern = r'^(\d){1,2}:(\d){2}:(\d){2}$'  # H/HH:MM:SS format
+ms_time_pattern = r'^(\d){1,2}:(\d){2}$'  # M/MM:SS format
 
 
 class video_transcription_FSM(StatesGroup):
@@ -92,16 +92,30 @@ async def start_time_entered(message: types.Message, state: FSMContext):
     input_start_time = message.text
     print("start_time: " + input_start_time)
     if re.match(hms_time_pattern, input_start_time):
-        time_object = datetime.strptime(input_start_time, '%H:%M:%S')
-        start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+        try:
+            time_object = datetime.strptime(input_start_time, '%H:%M:%S')
+            start_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+        except Exception as e:
+            await message.answer(
+                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐'
+            )
+            print(f"Error converting input start_time: {e}")
+            return
     elif re.match(ms_time_pattern, input_start_time):
-        time_object = datetime.strptime(input_start_time, '%M:%S')
-        start_time = time_object.minute * 60 + time_object.second
+        try:
+            time_object = datetime.strptime(input_start_time, '%M:%S')
+            start_time = time_object.minute * 60 + time_object.second
+        except Exception as e:
+            await message.answer(
+                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐'
+            )
+            print(f"Error converting input start_time: {e}")
+            return
     else:
         await message.answer(
             'Неверный формат времени для начала эпизода 🙈\n'
-            'Поправьте его, пожалуйста, чтобы я cмог его понять\n'
-            'Я понимаю в формате: ч:мм:сс или мм:сс'
+            'Я понимаю в формате: ч:мм:сс или мм:сс\n'
+            'Попробуйте ещё раз'
         )
         print("Wrong time format")
         return
@@ -141,16 +155,30 @@ async def end_time_entered(message: types.Message, state: FSMContext):
     input_end_time = message.text
     print("end_time: " + input_end_time)
     if re.match(hms_time_pattern, input_end_time):
-        time_object = datetime.strptime(input_end_time, '%H:%M:%S')
-        end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+        try:
+            time_object = datetime.strptime(input_end_time, '%H:%M:%S')
+            end_time = time_object.hour * 3600 + time_object.minute * 60 + time_object.second
+        except Exception as e:
+            await message.answer(
+                'Пожалуйста, удостоверьтесь, что в часах всё ещё 60 минут, а в минуте 60 секунд 🧐'
+            )
+            print(f"Error converting input end_time: {e}")
+            return
     elif re.match(ms_time_pattern, input_end_time):
-        time_object = datetime.strptime(input_end_time, '%M:%S')
-        end_time = time_object.minute * 60 + time_object.second
+        try:
+            time_object = datetime.strptime(input_end_time, '%M:%S')
+            end_time = time_object.minute * 60 + time_object.second
+        except Exception as e:
+            await message.answer(
+                'Пожалуйста, удостоверьтесь, что в минутах всё ещё 60 секунд 🧐'
+            )
+            print(f"Error converting input end_time: {e}")
+            return
     else:
         await message.answer(
             'Неверный формат времени для окончания эпизода 🙈\n'
-            'Поправьте его, пожалуйста, чтобы я cмог его понять\n'
-            'Я понимаю в формате: ч:мм:сс или мм:сс'
+            'Я понимаю в формате: ч:мм:сс или мм:сс\n'
+            'Попробуйте ещё раз'
         )
         print("Wrong time format")
         return
