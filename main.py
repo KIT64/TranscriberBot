@@ -47,6 +47,8 @@ async def start_video_transcription_input(message: types.Message, state: FSMCont
         'Отправьте ссылку на ролик в YouTube',
         reply_markup=keyboards.cancel_transcription_keyboard()
     )
+    if message.text == 'Начать ввод заново':
+        print('New transcription input was started')
 
 
 @dp.message(F.text == 'Отменить текущий ввод')
@@ -56,6 +58,7 @@ async def cancel_current_transcription_input(message: types.Message, state: FSMC
         'Ввод данных для транскрипции видео был отменен 👌',
         reply_markup=keyboards.main_keyboard()
     )
+    print('Current transcription input was canceled')
 
 
 @dp.message(video_transcription_FSM.waiting_for_youtube_url)
