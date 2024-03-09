@@ -16,6 +16,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
         mp4_file_path = utils.download_audio_from_youtube_video(
             video_url, audio_folder_path='audio storage'
         )
+        print(f'Audio was successfully downloaded to {mp4_file_path}')
     except Exception as e:
         await message.answer(
             'К сожалению, произошла ошибка при скачивании аудиофайла с YouTube 😔\n'
@@ -25,6 +26,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
 
     try:
         mp3_file_path = utils.trim_and_convert_to_mp3(mp4_file_path, start_time, end_time)
+        print(f'Audio was successfully trimmed and converted to {mp3_file_path}')
     except Exception as e:
         await message.answer(
             'К сожалению, произошла ошибка при обработке аудиофайла 😔\n'
@@ -33,6 +35,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
 
     try:
         transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
+        print(f'Transcription was successfully completed: {transcript}')
     except:
         await message.answer('Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒')
         return
