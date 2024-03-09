@@ -13,16 +13,23 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
     )
 
     try:
-        mp3_file_path = utils.get_mp3_from_youtube_video(
-            video_url, start_time, end_time, audio_folder_path='audio storage'
+        mp4_file_path = utils.download_audio_from_youtube_video(
+            video_url, audio_folder_path='audio storage'
         )
     except Exception as e:
         await message.answer(
-            'К сожалению, произошла ошибка при получении аудиофайла из видео 😔\n'
-            'Пожалуйста, обратитесь к разработчику, чтобы ошибка была исправлена 🔧'
+            'К сожалению, произошла ошибка при скачивании аудиофайла с YouTube 😔\n'
         )
-        print(f'Error downloading and converting audio from youtube video: {e}')
+        print(f'Error downloading audio from youtube video: {e}')
         return
+
+    try:
+        mp3_file_path = utils.trim_and_convert_to_mp3(mp4_file_path, start_time, end_time)
+    except Exception as e:
+        await message.answer(
+            'К сожалению, произошла ошибка при обработке аудиофайла 😔\n'
+        )
+        print(f'Error trimming and converting: {e}')
 
     try:
         transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')

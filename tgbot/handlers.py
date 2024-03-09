@@ -80,7 +80,7 @@ async def youtube_url_entered(message: types.Message, state: FSMContext):
 async def start_time_skipped(callback: types.CallbackQuery, state: FSMContext):
     print("start_time: skipped")
     await callback.answer('Время начала эпизода пропущено')
-    await state.update_data(start_time=0)
+    await state.update_data(start_time=None)
 
     await state.set_state(video_transcription_FSM.waiting_for_end_time)
     await callback.message.answer(
@@ -150,8 +150,7 @@ async def end_time_skipped(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     youtube_url = data.get('youtube_url')
     start_time = data.get('start_time')
-    video = pytube.YouTube(youtube_url)
-    end_time = video.length
+    end_time = None
 
     await state.clear()
     await core.transcribe_video_and_send_to_user(callback.message, youtube_url, start_time, end_time)
@@ -202,12 +201,13 @@ async def end_time_entered(message: types.Message, state: FSMContext):
             'Попробуйте ещё раз'
         )
         return
-    if start_time > end_time:
-        await message.answer(
-            'Хмм, кажется Вы что-то перепутали 🤔\n'
-            'У Вас время начала эпизода опережает время его окончания 🧐'
-        )
-        return
+    if start_time is not None:
+        if start_time > end_time:
+            await message.answer(
+                'Хмм, кажется Вы что-то перепутали 🤔\n'
+                'У Вас время начала эпизода опережает время его окончания 🧐'
+            )
+            return
 
     await state.clear()
     await core.transcribe_video_and_send_to_user(message, youtube_url, start_time, end_time)

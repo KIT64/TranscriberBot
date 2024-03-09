@@ -1,36 +1,58 @@
 import os
 import pytube
-from pydub import AudioSegment
+
+import subprocess
 
 
-def get_mp3_from_youtube_video(video_url, start_time, end_time, audio_folder_path="") -> str:
+def download_audio_from_youtube_video(video_url, audio_folder_path="") -> str:
     video = pytube.YouTube(video_url)
     mp4_audio_file_path = os.path.join(audio_folder_path, sanitize_filename(video.title) + ".mp4")
-    mp3_file_path = os.path.join(audio_folder_path, sanitize_filename(video.title) + ".mp3")
 
     if os.path.exists(mp4_audio_file_path):
-        print("MP4 file already exists. Skipping download.")
-    else:
-        try:
-            audio_stream = video.streams.get_audio_only()
-            print("Downloading the audio stream...")
-            mp4_audio_file_path = audio_stream.download(output_path=audio_folder_path)
-            if os.path.exists(mp4_audio_file_path):
-                print(f"Audio stream (mp4) downloaded to {mp4_audio_file_path}")
-            else:
-                print(f"Audio stream (mp4) failed to download")
-        except Exception as e:
-            print(f"Error while attempting to download audio stream from youtube: {e}")
-            raise e
+        print(f"Audio stream (mp4) already exists. Skipping download...")
+        return mp4_audio_file_path
+    
+    try:
+        audio_stream = video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first()
+        print("Downloading the audio stream...")
+        mp4_audio_file_path = audio_stream.download(output_path=audio_folder_path)
+        if os.path.exists(mp4_audio_file_path):
+            print(f"Audio stream (mp4) downloaded to {mp4_audio_file_path}")
+        else:
+            print(f"Audio stream (mp4) failed to download")
+    except Exception as e:
+        print(f"Error while attempting to download audio stream from youtube: {e}")
+        raise e
 
-    print("Converting mp4 to mp3...")
-    mp3_audio = AudioSegment.from_file(
-        mp4_audio_file_path, format="mp4", start_second=start_time, duration=(end_time - start_time)
-    )
-    mp3_audio.export(mp3_file_path, format="mp3")
-    print(f"MP4 audio was successfully converted to mp3")
+    return mp4_audio_file_path
 
-    return mp3_file_path
+
+def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
+    extension = os.path.splitext(file_path)[1]
+    if extension == ".mp3":
+        print(f"Conversion skipped. {file_path} is already in mp3 format")
+        return file_path
+
+    mp3_file_path = os.path.splitext(file_path)[0] + ".mp3"
+
+    ffmpeg_command = [
+        'ffmpeg',
+    ]
+    if start_time is not None:
+        ffmpeg_command.extend(['-ss', str(start_time)])
+    if end_time is not None:
+        ffmpeg_command.extend(['-to', str(end_time)])
+    ffmpeg_command.extend([
+        '-i', file_path,
+        '-vn',
+        '-acodec', 'libmp3lame',
+        mp3_file_path
+    ])
+    try:
+        subprocess.run(ffmpeg_command, check=True)
+        return mp3_file_path
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Error while trimming and converting {file_path} to mp3: {e}")
 
 
 def write_transcript_to_file(transcript, folder_path, file_name) -> str:
@@ -39,6 +61,7 @@ def write_transcript_to_file(transcript, folder_path, file_name) -> str:
     with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:
         transcript_file.write(transcript)
     return transcript_file_path
+
 
 def sanitize_filename(filename):
     invalid_chars = {'.', '/'}
