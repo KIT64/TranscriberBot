@@ -35,7 +35,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
 
     try:
         transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
-        print(f'Transcription was successfully completed: {transcript}')
+        print(f'Transcription was successfully completed')
     except:
         await message.answer('Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒')
         return
