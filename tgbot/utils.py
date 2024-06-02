@@ -35,6 +35,9 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
 
     mp3_file_path = os.path.splitext(file_path)[0] + ".mp3"
 
+    if os.path.exists(mp3_file_path):
+        os.remove(mp3_file_path)
+
     ffmpeg_command = [
         'ffmpeg',
     ]
@@ -48,6 +51,7 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
         '-acodec', 'libmp3lame',
         mp3_file_path
     ])
+
     try:
         subprocess.run(ffmpeg_command, check=True)
         return mp3_file_path

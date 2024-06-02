@@ -32,6 +32,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
             'К сожалению, произошла ошибка при обработке аудиофайла 😔\n'
         )
         print(f'Error trimming and converting: {e}')
+        return
 
     try:
         transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
