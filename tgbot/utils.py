@@ -59,15 +59,7 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
         raise Exception(f"Error while trimming and converting {file_path} to mp3: {e}")
 
 
-def write_transcript_to_file(transcript, folder_path, file_name) -> str:
-    os.makedirs(folder_path, exist_ok=True)
-    transcript_file_path = os.path.join(folder_path, file_name)
-    with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:
-        transcript_file.write(transcript)
-    return transcript_file_path
-
-
 def sanitize_filename(filename):
-    invalid_chars = {'.', '/'}
-    sanitized_filename = ''.join(char if char not in invalid_chars else '_' for char in filename)
+    invalid_chars = {'.', '/', '\\', '?', '|'}
+    sanitized_filename = ''.join(char if char not in invalid_chars else '' for char in filename)
     return sanitized_filename

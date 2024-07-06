@@ -2,6 +2,7 @@ __pycache__/
 audio storage/
 bot media/
 transcripts/
+subtitles/
 env/
 
 .env

@@ -1,5 +1,4 @@
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
@@ -8,7 +7,7 @@ import re
 from datetime import datetime
 
 import keyboards
-import core
+from core import transcribe_core
 
 
 router = Router()
@@ -24,37 +23,13 @@ class video_transcription_FSM(StatesGroup):
     waiting_for_end_time = State()
 
 
-@router.message(CommandStart())
-async def start(message: types.Message):
-    await message.answer(
-        'Привет! 👋\n'
-        'Я Бот-транскриптор 🤗\n'
-        'C помощью меня вы можете перевести видео в текст 📝\n'
-        'Чтобы начать, нажми на кнопку "Транскрипция видео"',
-        reply_markup=keyboards.main_keyboard(),
-    )
-
-
-@router.message(F.text == 'Транскрипция видео')
-@router.message(F.text == 'Начать ввод заново')
+@router.message(F.text == 'Сделать транскрипцию видео')
 async def start_video_transcription_input(message: types.Message, state: FSMContext):
     await state.set_state(video_transcription_FSM.waiting_for_youtube_url)
     await message.answer(
         'Отправьте ссылку на ролик в YouTube',
-        reply_markup=keyboards.cancel_transcription_keyboard(),
+        reply_markup=keyboards.cancel_input_keyboard(),
     )
-    if message.text == 'Начать ввод заново':
-        print('New transcription input was started')
-
-
-@router.message(F.text == 'Отменить текущий ввод')
-async def cancel_current_transcription_input(message: types.Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        'Ввод данных для транскрипции видео был отменен 👌',
-        reply_markup=keyboards.main_keyboard(),
-    )
-    print('Current transcription input was canceled')
 
 
 @router.message(video_transcription_FSM.waiting_for_youtube_url)
@@ -153,7 +128,7 @@ async def end_time_skipped(callback: types.CallbackQuery, state: FSMContext):
     end_time = None
 
     await state.clear()
-    await core.transcribe_video_and_send_to_user(callback.message, youtube_url, start_time, end_time)
+    await transcribe_core.transcribe_video_and_send_to_user(callback.message, youtube_url, start_time, end_time)
 
 
 @router.message(video_transcription_FSM.waiting_for_end_time)
@@ -210,4 +185,4 @@ async def end_time_entered(message: types.Message, state: FSMContext):
             return
 
     await state.clear()
-    await core.transcribe_video_and_send_to_user(message, youtube_url, start_time, end_time)
+    await transcribe_core.transcribe_video_and_send_to_user(message, youtube_url, start_time, end_time)
