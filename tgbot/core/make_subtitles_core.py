@@ -28,6 +28,7 @@ async def make_subtitles_and_send_to_user(message: types.Message):
         return
     
     try:
+        print("Creating subtitles...")
         subtitles = subtitle_maker.make_subtitles(audio_file_path, language="ru")
         print("Subtitles were successfully created")
     except Exception as e:
@@ -60,7 +61,7 @@ async def download_video_from_telegram(message: types.Message, folder):
 
 def generate_subtitles_file_name(audio_file_path):
     audio_file_name = os.path.basename(audio_file_path)
-    subtitles_file_name = os.path.splitext(audio_file_name)[0] + ".txt"
+    subtitles_file_name = os.path.splitext(audio_file_name)[0] + ".srt"
     return subtitles_file_name
 
 
