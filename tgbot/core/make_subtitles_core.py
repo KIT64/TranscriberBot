@@ -15,7 +15,10 @@ async def make_subtitles_and_send_to_user(message: types.Message):
         video_file_path = await download_video_from_telegram(message, folder="files from telegram")
         print(f"Video from Telegram was successfully downloaded to {video_file_path}")
     except Exception as e:
-        await message.answer("К сожалению, произошла ошибка при скачивании видео 🤔")
+        await message.answer(
+            "К сожалению, произошла ошибка при скачивании видео 🤔\n"
+            f"Причина: {e}"
+        )
         print(f"Error while attempting to download video: {e}")
         return
 
