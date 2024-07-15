@@ -15,7 +15,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
 
     try:
         mp4_file_path = utils.download_audio_from_youtube_video(
-            video_url, audio_folder_path='audio storage'
+            video_url, audio_folder_path='files from youtube'
         )
         print(f'Audio was successfully downloaded to {mp4_file_path}')
     except Exception as e:

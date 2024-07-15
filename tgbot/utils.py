@@ -35,9 +35,6 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
 
     mp3_file_path = os.path.splitext(file_path)[0] + ".mp3"
 
-    if os.path.exists(mp3_file_path):
-        os.remove(mp3_file_path)
-
     ffmpeg_command = [
         'ffmpeg',
     ]
@@ -49,6 +46,7 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
         '-i', file_path,
         '-vn',
         '-acodec', 'libmp3lame',
+        '-y',
         mp3_file_path
     ])
 
@@ -60,30 +58,20 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
 
 
 def extract_audio_from_video(video_path):
-    extension = os.path.splitext(video_path)[1]
-    if extension == ".mp3":
-        print(f"Conversion skipped. {video_path} is already in mp3 format")
-        return video_path
-    
-    audio_path = os.path.splitext(video_path)[0] + ".mp3"
-
-    if os.path.exists(audio_path):
-        print(f"Audio stream (mp3) already exists. Skipping extraction audio from video...")
-        return audio_path
-
     ffmpeg_command = [
         'ffmpeg',
         '-i', video_path,
         '-vn',
-        '-acodec', 'copy',
-        audio_path
+        '-acodec', 'libmp3lame',
+        '-y',
+        os.path.splitext(video_path)[0] + ".mp3"
     ]
 
     try:
         subprocess.run(ffmpeg_command, check=True)
-        return audio_path
+        return os.path.splitext(video_path)[0] + ".mp3"
     except subprocess.CalledProcessError as e:
-        raise Exception(f"Error while extracting audio from {video_path}: {e}")
+        raise Exception(f"Error while extracting audio from {video_path} and converting to mp3: {e}")
 
 
 def sanitize_filename(filename):

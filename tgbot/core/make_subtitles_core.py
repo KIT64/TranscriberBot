@@ -1,14 +1,18 @@
-from aiogram import types
+from aiogram import Bot, types
+from aiogram.methods.get_file import GetFile
 
 import os
+import datetime
 
 from utils import extract_audio_from_video
 from tools import subtitle_maker
 
 
 async def make_subtitles_and_send_to_user(message: types.Message):
+    # video files are not being deleted after processing a request
+    # but they won't be used in the future anyway as long as filename created based on current datetime
     try:
-        video_file_path = await message.video.download()
+        video_file_path = await download_video_from_telegram(message, folder="files from telegram")
         print(f"Video from Telegram was successfully downloaded to {video_file_path}")
     except Exception as e:
         await message.answer("К сожалению, произошла ошибка при скачивании видео 🤔")
@@ -40,6 +44,19 @@ async def make_subtitles_and_send_to_user(message: types.Message):
     subtitles_file_path = write_subtitles_to_file(subtitles, folder="subtitles", file_name=subtitles_file_name)
     await send_subtitles_to_user(message, subtitles_file_path)
 
+
+async def download_video_from_telegram(message: types.Message, folder):
+    bot = message.bot
+    file = await bot.get_file(message.video.file_id)
+
+    os.makedirs(folder, exist_ok=True)
+    file_name = f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
+    video_file_path = os.path.join(folder, file_name)
+
+    await bot.download_file(file.file_path, video_file_path)
+
+    return video_file_path
+    
 
 def generate_subtitles_file_name(audio_file_path):
     audio_file_name = os.path.basename(audio_file_path)

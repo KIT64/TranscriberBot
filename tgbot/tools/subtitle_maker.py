@@ -11,9 +11,10 @@ def make_subtitles(audio_file_path, language="ru"):
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     try:
-        subtitles = client.audio.transcriptions.create(
-            file=audio_file_path, model="whisper-1", language=language, response_format="srt"
-        )
+        with open(audio_file_path, "rb") as audio_file:
+            subtitles = client.audio.transcriptions.create(
+                file=audio_file, model="whisper-1", language=language, response_format="srt"
+            )
     except Exception as e:
         print("Error transcribing audio into .srt")
         raise e
