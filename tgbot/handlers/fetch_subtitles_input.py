@@ -7,6 +7,7 @@ import re
 import keyboards
 from core import fetch_subtitles_core
 
+
 router = Router()
 
 youtube_url_pattern = r'(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|live\/|embed\/)?([a-zA-Z0-9_-]{11})(\S*)?'

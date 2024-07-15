@@ -8,6 +8,7 @@ from tools import subtitle_fetcher
 from utils import sanitize_filename
 import keyboards
 
+
 async def fetch_subtitles_and_send_to_user(message: types.Message, youtube_url: str):
     try:
         video_id = get_youtube_video_id(youtube_url)

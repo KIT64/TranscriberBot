@@ -6,6 +6,7 @@ import utils
 from tools import transcriber
 import keyboards
 
+
 async def transcribe_video_and_send_to_user(message: types.Message, video_url, start_time, end_time):
     await message.answer(
         'Ссылку получил, сейчас выдам файл транскрипции 😇\n'
@@ -38,24 +39,26 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
         transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
         print(f'Transcription was successfully completed')
     except:
-        await message.answer('Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒')
+        await message.answer(
+            'Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒\n'
+            f'Причина: {e}'
+        )
         return
     finally:
         os.remove(mp3_file_path)
 
-    transcript_file_name = get_transcript_file_name(mp3_file_path)
+    transcript_file_name = generate_transcript_file_name(mp3_file_path)
     transcript_file_path = write_transcript_to_file(transcript, folder_path='transcripts', file_name=transcript_file_name)
     await send_transcription_to_user(message, transcript_file_path)
 
 
-def get_transcript_file_name(mp3_file_path):
+def generate_transcript_file_name(mp3_file_path):
     mp3_file_name = os.path.basename(mp3_file_path)
     transcript_file_name = os.path.splitext(mp3_file_name)[0] + '.txt'
-    transcript_file_name = mp3_file_name.replace('.mp3', '.txt')
     return transcript_file_name
 
 
-def write_transcript_to_file(transcript, folder_path, file_name) -> str:
+def write_transcript_to_file(transcript, folder_path, file_name):
     os.makedirs(folder_path, exist_ok=True)
     transcript_file_path = os.path.join(folder_path, file_name)
     with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:

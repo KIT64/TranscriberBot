@@ -1,5 +1,6 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
+
 def main_keyboard():
     builder = ReplyKeyboardBuilder()
     builder.button(text='Сделать транскрипцию видео')
