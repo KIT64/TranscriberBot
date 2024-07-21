@@ -58,13 +58,19 @@ def trim_and_convert_to_mp3(file_path, start_time=None, end_time=None):
 
 
 def extract_audio_from_video(video_path):
+    audio_file_path = os.path.splitext(video_path)[0] + ".mp3"
+
+    if os.path.exists(audio_file_path):
+        print(f"Audio file already exists. Skipping extraction...")
+        return audio_file_path
+
     ffmpeg_command = [
         'ffmpeg',
         '-i', video_path,
         '-vn',
         '-acodec', 'libmp3lame',
         '-y',
-        os.path.splitext(video_path)[0] + ".mp3"
+        audio_file_path
     ]
 
     try:

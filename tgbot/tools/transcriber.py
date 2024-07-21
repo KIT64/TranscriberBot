@@ -10,19 +10,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MAX_FILE_SIZE = 25  # MEGABYTES
 
 
-def split_audio(file_path, max_length, format="mp3"):
-    audio = AudioSegment.from_file(file_path, format=format)
-    length_audio = len(audio)
-    parts = int(length_audio / max_length) + 1
-    audio_chunks = [audio[i * max_length : (i + 1) * max_length] for i in range(parts)]
-    return audio_chunks
-
-
-def get_bitrate(file_path):
-    bitrate = int(mediainfo(file_path)["bit_rate"])
-    return bitrate
-
-
 def transcribe(audio_file_path: str, language="ru", format="mp3") -> str:
     client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -64,6 +51,19 @@ def transcribe(audio_file_path: str, language="ru", format="mp3") -> str:
 
     full_transcript = " ".join(transcript.strip() for transcript in transcripts)
     return full_transcript
+
+
+def split_audio(file_path, max_length, format="mp3"):
+    audio = AudioSegment.from_file(file_path, format=format)
+    length_audio = len(audio)
+    parts = int(length_audio / max_length) + 1
+    audio_chunks = [audio[i * max_length : (i + 1) * max_length] for i in range(parts)]
+    return audio_chunks
+
+
+def get_bitrate(file_path):
+    bitrate = int(mediainfo(file_path)["bit_rate"])
+    return bitrate
 
 
 if __name__ == "__main__":

@@ -1,16 +1,13 @@
-from aiogram import Bot, types
+from aiogram import types
 from pyrogram import Client
 
 import os
-import datetime
 
 from utils import extract_audio_from_video
 from tools import subtitle_maker
 
 
 async def make_subtitles_and_send_to_user(message: types.Message):
-    # video files are not being deleted after processing a request
-    # but they won't be used in the future anyway as long as filename created based on current datetime
     try:
         print("Downloading video from Telegram...")
         video_file_path = await download_video_from_telegram(message, folder="files from telegram")
@@ -34,7 +31,7 @@ async def make_subtitles_and_send_to_user(message: types.Message):
     
     try:
         print("Creating subtitles...")
-        subtitles = subtitle_maker.make_subtitles(audio_file_path, language="ru")
+        subtitles = subtitle_maker.make_subtitles(audio_file_path, language="ru", format="mp3")
         print("Subtitles were successfully created")
     except Exception as e:
         await message.answer(
@@ -43,8 +40,6 @@ async def make_subtitles_and_send_to_user(message: types.Message):
         )
         print(f"Error while attempting to make subtitles: {e}")
         return
-    finally:
-        os.remove(audio_file_path)
     
     subtitles_file_name = generate_subtitles_file_name(audio_file_path)
     subtitles_file_path = write_subtitles_to_file(subtitles, folder="subtitles", file_name=subtitles_file_name)
@@ -62,6 +57,11 @@ async def download_video_from_telegram(message: types.Message, folder):
         os.makedirs(folder, exist_ok=True)
         video_file_name = message.video.file_name
         video_file_path = os.path.abspath(os.path.join(folder, video_file_name))
+
+        if os.path.exists(video_file_path):
+            print(f"Video file already exists. Skipping download...")
+            return video_file_path
+
         await app.download_media(message.video, file_name=video_file_path)
 
     return video_file_path

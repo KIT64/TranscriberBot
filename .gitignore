@@ -9,3 +9,4 @@ tgbot/transcriber_bot.session
 
 .env
 .TODO
+*.mp3
