@@ -1,5 +1,5 @@
 from aiogram import Bot, types
-from aiogram.methods.get_file import GetFile
+from pyrogram import Client
 
 import os
 import datetime
@@ -12,6 +12,7 @@ async def make_subtitles_and_send_to_user(message: types.Message):
     # video files are not being deleted after processing a request
     # but they won't be used in the future anyway as long as filename created based on current datetime
     try:
+        print("Downloading video from Telegram...")
         video_file_path = await download_video_from_telegram(message, folder="files from telegram")
         print(f"Video from Telegram was successfully downloaded to {video_file_path}")
     except Exception as e:
@@ -23,6 +24,7 @@ async def make_subtitles_and_send_to_user(message: types.Message):
         return
 
     try:
+        print("Extracting audio from video...")
         audio_file_path = extract_audio_from_video(video_file_path)
         print(f"Audio was successfully extracted from video to {audio_file_path}")
     except Exception as e:
@@ -49,15 +51,18 @@ async def make_subtitles_and_send_to_user(message: types.Message):
     await send_subtitles_to_user(message, subtitles_file_path)
 
 
+#TODO: file download progress
 async def download_video_from_telegram(message: types.Message, folder):
-    bot = message.bot
-    file = await bot.get_file(message.video.file_id)
-
-    os.makedirs(folder, exist_ok=True)
-    file_name = f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
-    video_file_path = os.path.join(folder, file_name)
-
-    await bot.download_file(file.file_path, video_file_path)
+    async with Client(
+        "transcriber_bot",
+        api_id=os.getenv("API_ID"),
+        api_hash=os.getenv("API_HASH"),
+        bot_token=os.getenv("BOT_TOKEN")
+    ) as app:
+        os.makedirs(folder, exist_ok=True)
+        video_file_name = message.video.file_name
+        video_file_path = os.path.abspath(os.path.join(folder, video_file_name))
+        await app.download_media(message.video, file_name=video_file_path)
 
     return video_file_path
     

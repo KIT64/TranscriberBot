@@ -11,4 +11,5 @@ async def make_subtitles_input(message: types.Message):
     await message.answer(
         'Видео было получено, сейчас выдам субтитры 😇'
     )
+    print("Got a message with video")
     await make_subtitles_core.make_subtitles_and_send_to_user(message)
