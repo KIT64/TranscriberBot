@@ -5,6 +5,7 @@ bot media/
 transcripts/
 subtitles/
 env/
+tgbot/transcriber_bot.session
 
 .env
 .TODO
