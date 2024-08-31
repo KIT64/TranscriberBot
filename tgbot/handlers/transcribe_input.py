@@ -2,7 +2,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-import pytube
+import pytubefix
 import re
 from datetime import datetime
 
@@ -100,7 +100,7 @@ async def start_time_entered(message: types.Message, state: FSMContext):
         print("Wrong time format")
         return
     data = await state.get_data()
-    video = pytube.YouTube(data.get('youtube_url'))
+    video = pytubefix.YouTube(data.get('youtube_url'))
     if start_time > video.length:
         await message.answer(
             'Время начала эпизода больше, чем длина всего видео 😲\n'
@@ -168,7 +168,7 @@ async def end_time_entered(message: types.Message, state: FSMContext):
     data = await state.get_data()
     youtube_url = data.get('youtube_url')
     start_time = data.get('start_time')
-    video = pytube.YouTube(youtube_url)
+    video = pytubefix.YouTube(youtube_url)
     if end_time > video.length:
         await message.answer(
             'Время окончания эпизода больше, чем длина всего видео 😲\n'

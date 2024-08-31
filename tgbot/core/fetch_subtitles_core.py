@@ -1,7 +1,7 @@
 from aiogram import types
 
 import re
-from pytube import YouTube
+from pytubefix import YouTube
 import os
 
 from tools import subtitle_fetcher

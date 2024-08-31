@@ -1,11 +1,11 @@
 import os
-import pytube
+import pytubefix
 
 import subprocess
 
 
 def download_audio_from_youtube_video(video_url, audio_folder_path="") -> str:
-    video = pytube.YouTube(video_url)
+    video = pytubefix.YouTube(video_url)
     mp4_audio_file_path = os.path.join(audio_folder_path, sanitize_filename(video.title) + ".mp4")
 
     if os.path.exists(mp4_audio_file_path):
