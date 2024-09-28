@@ -1,4 +1,6 @@
 from aiogram import types
+from aiogram.types import FSInputFile
+from pyrogram import Client
 import os
 
 import utils
@@ -90,11 +92,11 @@ async def send_message(message: types.Message, text: str, is_channel: bool):
 
 
 async def send_transcription_file(message: types.Message, transcript_file_path: str, is_channel: bool):
-    with open(transcript_file_path, 'rb') as file:
-        if is_channel:
-            await message.answer_document(file, reply_to_message_id=message.message_id)
-        else:
-            await message.reply_document(file)
+    file = FSInputFile(transcript_file_path)
+    if is_channel:
+        await message.answer_document(file, reply_to_message_id=message.message_id)
+    else:
+        await message.reply_document(file)
     os.remove(transcript_file_path)
     print('Transcription was successfully sent to the user')
 
