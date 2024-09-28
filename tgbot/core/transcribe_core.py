@@ -1,11 +1,11 @@
 from aiogram import types
-
 import os
 
 import utils
 from tools import transcriber
 import keyboards
 
+MAX_MESSAGE_LENGTH = 4096
 
 async def transcribe_video_and_send_to_user(message: types.Message, video_url, start_time, end_time):
     await message.answer(
@@ -52,6 +52,40 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
     await send_transcription_to_user(message, transcript_file_path)
 
 
+async def transcribe_audio_and_send_to_user(message: types.Message):
+    try:
+        print("Downloading audio from Telegram...")
+        audio_file_path = await download_audio_from_telegram(message, folder="files from telegram")
+        print(f"Audio from Telegram was successfully downloaded to {audio_file_path}")
+    except Exception as e:
+        await message.answer(
+            "К сожалению, произошла ошибка при скачивании аудио 😔\n"
+            f"Причина: {e}"
+        )
+        print(f"Error while attempting to download audio: {e}")
+        return
+
+    try:
+        print("Transcribing audio...")
+        transcript = transcriber.transcribe(audio_file_path, language="ru", format="ogg")
+        print("Audio was successfully transcribed")
+    except Exception as e:
+        await message.answer(
+            "Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒\n"
+            f"Причина: {e}"
+        )
+        return
+    finally:
+        os.remove(audio_file_path)
+
+    if len(transcript) <= MAX_MESSAGE_LENGTH:
+        await message.answer(f"{transcript}")
+    else:
+        transcript_file_name = generate_transcript_file_name(audio_file_path)
+        transcript_file_path = write_transcript_to_file(transcript, folder_path='transcripts', file_name=transcript_file_name)
+        await send_transcription_to_user(message, transcript_file_path)
+
+
 def generate_transcript_file_name(mp3_file_path):
     mp3_file_name = os.path.basename(mp3_file_path)
     transcript_file_name = os.path.splitext(mp3_file_name)[0] + '.txt'
@@ -73,3 +107,15 @@ async def send_transcription_to_user(message: types.Message, transcript_file_pat
     await message.answer_document(file_id, reply_markup=keyboards.main_keyboard())
     os.remove(transcript_file_path)
     print('Transcription was successfully sent to the user')
+
+
+async def download_audio_from_telegram(message: types.Message, folder):
+    file = await message.bot.get_file(message.voice.file_id)
+    file_path = file.file_path
+    
+    os.makedirs(folder, exist_ok=True)
+    audio_file_name = f"voice_{message.message_id}.ogg"
+    audio_file_path = os.path.abspath(os.path.join(folder, audio_file_name))
+
+    await message.bot.download_file(file_path, audio_file_path)
+    return audio_file_path

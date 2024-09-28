@@ -31,7 +31,9 @@ def transcribe(audio_file_path: str, language="ru", format="mp3") -> str:
     print(f"Bitrate: {bitrate_kbps:.9f} kbps")
     max_length_seconds = ((MAX_FILE_SIZE * 1024 * 8) / bitrate_kbps) - 1  # -1 second to ensure
     max_length = int(max_length_seconds * 1000)  # measured in milliseconds
-    audio_chunks = split_audio(audio_file_path, max_length, format) # potential error here because pydub.AudioSegment requires a lot of RAM
+    audio_chunks = split_audio(
+        audio_file_path, max_length, format
+    )  # potential error here because pydub.AudioSegment requires a lot of RAM
     print(f"Number of chunks: {len(audio_chunks)}")
 
     transcripts = []

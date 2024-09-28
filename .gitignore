@@ -4,7 +4,7 @@ files from youtube/
 bot media/
 transcripts/
 subtitles/
-env/
+.venv/
 tgbot/transcriber_bot.session
 
 .env

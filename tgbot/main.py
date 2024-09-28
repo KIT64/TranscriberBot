@@ -3,7 +3,13 @@ from aiogram import Bot, Dispatcher
 
 from os import getenv
 
-from handlers import common_handlers, transcribe_input, fetch_subtitles_input, make_subtitles_input
+from handlers import (
+    common_handlers,
+    transcribe_input,
+    fetch_subtitles_input,
+    make_subtitles_input,
+    audio_transcribe_input
+)
 
 
 async def main():
@@ -14,7 +20,8 @@ async def main():
     dp.include_router(transcribe_input.router)
     dp.include_router(fetch_subtitles_input.router)
     dp.include_router(make_subtitles_input.router)
-
+    dp.include_router(audio_transcribe_input.router)
+    
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
