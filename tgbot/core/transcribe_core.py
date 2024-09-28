@@ -133,3 +133,26 @@ async def download_audio_from_telegram(message: types.Message, folder):
 
     await message.bot.download_file(file_path, audio_file_path)
     return audio_file_path
+
+#TODO: file download progress
+async def download_audio_from_telegram(message: types.Message, folder):
+    async with Client(
+        "transcriber_bot",
+        api_id=os.getenv("API_ID"),
+        api_hash=os.getenv("API_HASH"),
+        bot_token=os.getenv("BOT_TOKEN")
+    ) as app:
+        os.makedirs(folder, exist_ok=True)
+        audio_file_name = f"voice_{message.message_id}.ogg"
+        audio_file_path = os.path.abspath(os.path.join(folder, audio_file_name))
+
+        if os.path.exists(audio_file_path):
+            print(f"Audio file already exists. Skipping download...")
+            return audio_file_path
+
+        if not message.voice or message.voice.mime_type != 'audio/ogg':
+            raise ValueError("This function only works with voice messages in .ogg format")
+
+        await app.download_media(message.voice, file_name=audio_file_path)
+
+    return audio_file_path
