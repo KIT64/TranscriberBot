@@ -52,16 +52,14 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
     await send_transcription_to_user(message, transcript_file_path)
 
 
-async def transcribe_audio_and_send_to_user(message: types.Message):
+async def transcribe_audio_and_send_to_user(message: types.Message, is_channel=False):
     try:
         print("Downloading audio from Telegram...")
         audio_file_path = await download_audio_from_telegram(message, folder="files from telegram")
         print(f"Audio from Telegram was successfully downloaded to {audio_file_path}")
     except Exception as e:
-        await message.answer(
-            "К сожалению, произошла ошибка при скачивании аудио 😔\n"
-            f"Причина: {e}"
-        )
+        error_message = f"К сожалению, произошла ошибка при скачивании аудио 😔\nПричина: {e}"
+        await send_message(message, error_message, is_channel)
         print(f"Error while attempting to download audio: {e}")
         return
 
@@ -70,20 +68,35 @@ async def transcribe_audio_and_send_to_user(message: types.Message):
         transcript = transcriber.transcribe(audio_file_path, language="ru", format="ogg")
         print("Audio was successfully transcribed")
     except Exception as e:
-        await message.answer(
-            "Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒\n"
-            f"Причина: {e}"
-        )
+        error_message = f"Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒\nПричина: {e}"
+        await send_message(message, error_message, is_channel)
         return
     finally:
         os.remove(audio_file_path)
 
     if len(transcript) <= MAX_MESSAGE_LENGTH:
-        await message.answer(f"{transcript}")
+        await send_message(message, f"💬 {transcript}", is_channel)
     else:
         transcript_file_name = generate_transcript_file_name(audio_file_path)
         transcript_file_path = write_transcript_to_file(transcript, folder_path='transcripts', file_name=transcript_file_name)
-        await send_transcription_to_user(message, transcript_file_path)
+        await send_transcription_file(message, transcript_file_path, is_channel)
+
+
+async def send_message(message: types.Message, text: str, is_channel: bool):
+    if is_channel:
+        await message.answer(text, reply_to_message_id=message.message_id)
+    else:
+        await message.reply(text)
+
+
+async def send_transcription_file(message: types.Message, transcript_file_path: str, is_channel: bool):
+    with open(transcript_file_path, 'rb') as file:
+        if is_channel:
+            await message.answer_document(file, reply_to_message_id=message.message_id)
+        else:
+            await message.reply_document(file)
+    os.remove(transcript_file_path)
+    print('Transcription was successfully sent to the user')
 
 
 def generate_transcript_file_name(mp3_file_path):
@@ -98,7 +111,6 @@ def write_transcript_to_file(transcript, folder_path, file_name):
     with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:
         transcript_file.write(transcript)
     return transcript_file_path
-
 
 async def send_transcription_to_user(message: types.Message, transcript_file_path):
     with open(transcript_file_path, 'r', encoding='utf-8') as transcript_file:
