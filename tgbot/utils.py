@@ -2,6 +2,7 @@ import os
 import pytubefix
 
 import subprocess
+import tempfile
 
 
 def download_audio_from_youtube_video(video_url, audio_folder_path="") -> str:
@@ -84,3 +85,66 @@ def sanitize_filename(filename):
     invalid_chars = {'.', '/', '\\', '?', '|'}
     sanitized_filename = ''.join(char if char not in invalid_chars else '' for char in filename)
     return sanitized_filename
+
+
+def split_audio(file_path, max_length, extension="mp3"):
+    total_duration = get_duration(file_path)
+    parts = int(total_duration / max_length) + 1
+    print(f"Total duration of audio: {total_duration} seconds")
+    print(f"Number of chunks to split into: {parts}")
+
+    audio_chunks = []
+    for i in range(parts):
+        start_time = i * (max_length)
+        chunk_duration = min(max_length, total_duration - start_time)
+        print(f"Processing chunk {i+1}/{parts}: start_time={start_time}, duration={chunk_duration:.2f}")
+
+        with tempfile.NamedTemporaryFile(suffix=f".{extension}", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+            cmd = [
+                "ffmpeg",
+                "-i", file_path,
+                "-ss", str(start_time),
+                "-t", str(chunk_duration),
+                "-c", "copy",
+                "-y",
+                "-loglevel", "0",
+                temp_path
+            ]
+            
+            subprocess.run(cmd, check=True)
+            print(f"Chunk {i+1} created successfully")
+
+            audio_chunks.append(temp_path)
+
+    return audio_chunks
+
+
+def get_duration(file_path):
+    duration_cmd = [
+        "ffprobe",
+        "-v", "error",
+        "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        file_path
+    ]
+    try:
+        duration = float(subprocess.check_output(duration_cmd).decode().strip())
+        return duration
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Error while getting duration of {file_path}: {e}")
+
+
+def get_bitrate(file_path):
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=bit_rate", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
+    output = subprocess.check_output(cmd).decode().strip()
+    
+    if output:
+        bitrate = int(output)
+    else:
+        cmd = ["ffprobe", "-v", "error", "-show_entries", "format=bit_rate", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
+        output = subprocess.check_output(cmd).decode().strip()
+        bitrate = int(output) if output else 0
+
+    return bitrate

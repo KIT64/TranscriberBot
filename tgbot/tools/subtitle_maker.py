@@ -1,7 +1,7 @@
 import os
-from pydub import AudioSegment
-from pydub.utils import mediainfo
 from openai import OpenAI
+from utils import split_audio, get_bitrate
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,7 +10,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MAX_FILE_SIZE = 15  # MEGABYTES
 
 
-def make_subtitles(audio_file_path, language="ru", format="mp3"):
+def make_subtitles(audio_file_path, language="ru", extension="mp3"):
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     file_size = os.path.getsize(audio_file_path)
@@ -26,25 +26,24 @@ def make_subtitles(audio_file_path, language="ru", format="mp3"):
             print("Error transcribing audio into .srt")
             raise e
         return subtitles
-    
+
     bitrate_kbps = get_bitrate(audio_file_path) / 1024
     print(f"Bitrate: {bitrate_kbps:.9f} kbps")
-    max_length_seconds = ((MAX_FILE_SIZE * 1024 * 8) / bitrate_kbps) - 1  # -1 second to ensure
-    max_length = int(max_length_seconds * 1000)  # measured in milliseconds
-    audio_chunks = split_audio(audio_file_path, max_length, format) # potential error here because pydub.AudioSegment requires a lot of RAM
+    max_length = ((MAX_FILE_SIZE * 1024 * 8) / bitrate_kbps) - 1  # -1 second to ensure
+    audio_chunks = split_audio(audio_file_path, max_length, extension)
     print(f"Number of chunks: {len(audio_chunks)}")
 
     subtitles_list = []
     cumulative_duration = 0
     for chunk_index, chunk in enumerate(audio_chunks):
-        temp_audio_file_path = f"temp_chunk_{chunk_index}.{format}"
-        chunk.export(temp_audio_file_path, format=format)
+        temp_audio_file_path = f"temp_chunk_{chunk_index}.{extension}"
+        chunk.export(temp_audio_file_path, format=extension)
         try:
             with open(temp_audio_file_path, "rb") as audio_file:
                 response = client.audio.transcriptions.create(
                     file=audio_file, model="whisper-1", language=language, response_format="srt"
                 )
-                cumulative_duration = max_length_seconds * chunk_index
+                cumulative_duration = max_length * chunk_index
                 response = adjust_chunk_timestamp(response, cumulative_duration)
                 print(f"Audio chunk #{chunk_index} transcribed successfully")
         except Exception as e:
@@ -75,26 +74,13 @@ def adjust_chunk_timestamp(subtitles, cumulative_duration):
 def adjust_time(time, duration):
     hms_time, milliseconds = time.split(',')
     hours, minutes, seconds = hms_time.split(':')
-    
+
     total_seconds = int(hours) * 3600 + int(minutes) * 60 + int(seconds) + int(duration)
-    
+
     new_hours, remaining_seconds = divmod(total_seconds, 3600)
     new_minutes, new_seconds = divmod(remaining_seconds, 60)
-    
+
     return f"{new_hours:02d}:{new_minutes:02d}:{new_seconds:02d}.{milliseconds}"
-
-
-def split_audio(file_path, max_length, format="mp3"):
-    audio = AudioSegment.from_file(file_path, format=format)
-    length_audio = len(audio)
-    parts = int(length_audio / max_length) + 1
-    audio_chunks = [audio[i * max_length : (i + 1) * max_length] for i in range(parts)]
-    return audio_chunks
-
-
-def get_bitrate(file_path):
-    bitrate = int(mediainfo(file_path)["bit_rate"])
-    return bitrate
 
 
 def merge_srt_responses(srt_list):
@@ -110,9 +96,8 @@ def merge_srt_responses(srt_list):
                 else:
                     lines.append(line + "\n")
             lines.append("\n")
-        
-    return "".join(lines)
 
+    return "".join(lines)
 
 
 def srt_to_str(srt_file_path):

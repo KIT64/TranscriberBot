@@ -38,7 +38,7 @@ async def transcribe_video_and_send_to_user(message: types.Message, video_url, s
         return
 
     try:
-        transcript = transcriber.transcribe(mp3_file_path, language='ru', format='mp3')
+        transcript = transcriber.transcribe(mp3_file_path, language='ru', extension='mp3')
         print(f'Transcription was successfully completed')
     except:
         await message.answer(
@@ -67,14 +67,15 @@ async def transcribe_audio_and_send_to_user(message: types.Message, is_channel=F
 
     try:
         print("Transcribing audio...")
-        transcript = transcriber.transcribe(audio_file_path, language="ru", format="ogg")
+        file_extension = os.path.splitext(audio_file_path)[1].lower()[1:]
+        transcript = transcriber.transcribe(audio_file_path, language="ru", extension=file_extension)
         print("Audio was successfully transcribed")
     except Exception as e:
         error_message = f"Произошла ошибка, похоже, что сервис транскрипции OpenAI временно не доступен 😒\nПричина: {e}"
         await send_message(message, error_message, is_channel)
         return
-    finally:
-        os.remove(audio_file_path)
+    # finally:
+    #     os.remove(audio_file_path)
 
     if len(transcript) <= MAX_MESSAGE_LENGTH:
         await send_message(message, f"💬 {transcript}", is_channel)
@@ -122,18 +123,6 @@ async def send_transcription_to_user(message: types.Message, transcript_file_pat
     os.remove(transcript_file_path)
     print('Transcription was successfully sent to the user')
 
-
-async def download_audio_from_telegram(message: types.Message, folder):
-    file = await message.bot.get_file(message.voice.file_id)
-    file_path = file.file_path
-    
-    os.makedirs(folder, exist_ok=True)
-    audio_file_name = f"voice_{message.message_id}.ogg"
-    audio_file_path = os.path.abspath(os.path.join(folder, audio_file_name))
-
-    await message.bot.download_file(file_path, audio_file_path)
-    return audio_file_path
-
 #TODO: file download progress
 async def download_audio_from_telegram(message: types.Message, folder):
     async with Client(
@@ -143,16 +132,35 @@ async def download_audio_from_telegram(message: types.Message, folder):
         bot_token=os.getenv("BOT_TOKEN")
     ) as app:
         os.makedirs(folder, exist_ok=True)
-        audio_file_name = f"voice_{message.message_id}.ogg"
+
+        if message.voice:
+            print(f"Voice message detected")
+            file = message.voice
+            mime_type = file.mime_type
+            print(f"Mime type: {mime_type}")
+            if mime_type == "audio/ogg":
+                file_extension = ".ogg"
+            elif mime_type == "audio/mpeg":
+                file_extension = ".m4a"
+            else:
+                raise ValueError(f"Unsupported MIME type: {mime_type}")
+        elif message.audio:
+            print(f"Audio message detected")
+            mime_type = message.audio.mime_type
+            print(f"Mime type: {mime_type}")
+            file = message.audio
+            file_extension = ".mp3"
+        else:
+            raise ValueError("This function only works with voice messages or audio files")
+
+        audio_file_name = f"audio_{message.message_id}{file_extension}"
         audio_file_path = os.path.abspath(os.path.join(folder, audio_file_name))
 
         if os.path.exists(audio_file_path):
             print(f"Audio file already exists. Skipping download...")
             return audio_file_path
 
-        if not message.voice or message.voice.mime_type != 'audio/ogg':
-            raise ValueError("This function only works with voice messages in .ogg format")
+        await app.download_media(file, file_name=audio_file_path)
 
-        await app.download_media(message.voice, file_name=audio_file_path)
-
+    print(f"Audio file downloaded: {audio_file_path}")
     return audio_file_path

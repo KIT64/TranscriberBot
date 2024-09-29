@@ -31,7 +31,7 @@ async def make_subtitles_and_send_to_user(message: types.Message):
     
     try:
         print("Creating subtitles...")
-        subtitles = subtitle_maker.make_subtitles(audio_file_path, language="ru", format="mp3")
+        subtitles = subtitle_maker.make_subtitles(audio_file_path, language="ru", extension="mp3")
         print("Subtitles were successfully created")
     except Exception as e:
         await message.answer(
