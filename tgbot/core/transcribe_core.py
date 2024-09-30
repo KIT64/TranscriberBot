@@ -111,7 +111,7 @@ def generate_transcript_file_name(mp3_file_path):
 def write_transcript_to_file(transcript, folder_path, file_name):
     os.makedirs(folder_path, exist_ok=True)
     transcript_file_path = os.path.join(folder_path, file_name)
-    with open(transcript_file_path, "w", encoding="utf-8") as transcript_file:
+    with open(transcript_file_path, "w", encoding="utf-8-sig") as transcript_file:
         transcript_file.write(transcript)
     return transcript_file_path
 

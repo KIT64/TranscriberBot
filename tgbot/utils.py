@@ -140,11 +140,15 @@ def get_bitrate(file_path):
     cmd = ["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=bit_rate", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
     output = subprocess.check_output(cmd).decode().strip()
     
-    if output:
+    if output and output != 'N/A':
         bitrate = int(output)
     else:
         cmd = ["ffprobe", "-v", "error", "-show_entries", "format=bit_rate", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
         output = subprocess.check_output(cmd).decode().strip()
-        bitrate = int(output) if output else 0
+        if output and output != 'N/A':
+            bitrate = int(output)
+        else:
+            print(f"Warning: Bitrate can't be determined. Defaulting to 128 kbps")
+            bitrate = 128000  # Default to 128 kbps if bitrate can't be determined
 
     return bitrate
