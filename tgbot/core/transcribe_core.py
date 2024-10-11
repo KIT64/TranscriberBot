@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.types import FSInputFile
 from pyrogram import Client
 import os
+import uuid
 
 import utils
 from tools import transcriber
@@ -126,7 +127,7 @@ async def send_transcription_to_user(message: types.Message, transcript_file_pat
 #TODO: file download progress
 async def download_audio_from_telegram(message: types.Message, folder):
     async with Client(
-        "transcriber_bot",
+        f"bot_session_{uuid.uuid4()}",
         api_id=os.getenv("API_ID"),
         api_hash=os.getenv("API_HASH"),
         bot_token=os.getenv("BOT_TOKEN")

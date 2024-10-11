@@ -6,6 +6,7 @@ transcripts/
 subtitles/
 .venv/
 tgbot/transcriber_bot.session
+tgbot/bot_session_*.session
 
 .env
 .TODO
